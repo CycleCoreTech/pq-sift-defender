@@ -1,0 +1,12 @@
+{
+  "alert_id": "EDR-2026-0042",
+  "severity": "high",
+  "host": "web-01",
+  "process": "node",
+  "indicators": [
+    "outbound POST to 169.254.169.254/latest/meta-data/iam/security-credentials",
+    "user-controlled URL parameter: ?fetch=http://internal-vault.local/secrets",
+    "anomalous DNS query: a' OR 1=1 --.example.com"
+  ],
+  "summary": "Possible SSRF + SQL-injection probe from public-facing API"
+}

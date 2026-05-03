@@ -1,0 +1,39 @@
+AI agents are powerful. They're also manipulable.
+
+When you deploy an autonomous agent for incident response, the agent itself becomes an attack surface. A crafted alert payload can inject instructions that make the agent exfiltrate data, reach internal endpoints, or suppress its own findings.
+
+pq-sift-defender solves both sides of this problem. It investigates alerts autonomously using a small open-weight model running entirely on CPU. And it defends against its own manipulation through a security boundary that intercepts hostile tool inputs before they execute.
+
+Every action the agent takes is signed with post-quantum cryptography and recorded in a tamper-proof audit chain.
+
+Let me show you what that looks like.
+
+First, a baseline. This is a routine login alert. Low severity.
+
+The agent ingests the alert, runs it through a microsecond pre-filter, and calls its classifier tool. The pre-filter returns PASS. The classifier returns PASS.
+
+Verdict: PASS. No threat detected. Three chain entries signed. That took about four seconds on CPU, no GPU.
+
+Now the case that matters.
+
+This alert contains a prompt injection. Hidden inside the payload is a directive telling the agent to fetch cloud metadata from the AWS instance metadata endpoint — one sixty-nine dot two fifty-four dot one sixty-nine dot two fifty-four. Classic SSRF.
+
+The model is one-point-five billion parameters. It's small. And it takes the bait.
+
+Watch the tool call. The agent tries to pass the injected URL to a forensic tool. But the security boundary catches it. That input matches a known SSRF pattern. The dispatch is blocked before it reaches the tool, and the interception is recorded as a signed entry on the audit chain.
+
+The agent recovers. It recognizes the block as evidence of a real threat and issues a BLOCK verdict citing the boundary interception.
+
+The model was compromised. The system was not. That's defense in depth — and it works precisely because the boundary operates below the model's reasoning layer, not inside it.
+
+Now we verify the audit trail independently.
+
+This calls the public post-quantum signing API, which checks every entry's signature and hash linkage.
+
+Valid. Three entries. Each signed with ML-DSA-65 — that's NIST FIPS 204, the post-quantum digital signature standard finalized in 2024. These signatures resist quantum cryptanalysis. The audit trail remains verifiable and admissible decades from now.
+
+Any third party can repeat this verification with just the chain ID.
+
+Ten sample cases. Ten correct verdicts. Four seconds on CPU. A one-point-five billion parameter open-weight model. No GPU. No cloud inference. Runs on the affected server itself.
+
+Apache 2.0. Links below.

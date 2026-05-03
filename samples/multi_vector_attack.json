@@ -1,0 +1,12 @@
+{
+  "alert_id": "WAF-2026-0512",
+  "severity": "high",
+  "host": "shop-frontend-01",
+  "process": "nginx",
+  "indicators": [
+    "POST body parameter `q`: ' UNION SELECT username, password FROM users --",
+    "GET parameter `file`: ../../../../../etc/passwd",
+    "single source IP attempted both within 4 seconds"
+  ],
+  "summary": "Single source attempting both SQL injection and path traversal in rapid succession. Likely automated reconnaissance."
+}

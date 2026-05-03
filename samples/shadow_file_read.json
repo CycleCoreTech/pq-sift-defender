@@ -1,0 +1,12 @@
+{
+  "alert_id": "FIM-2026-0513",
+  "severity": "critical",
+  "host": "auth-prod-04",
+  "process": "php-fpm",
+  "indicators": [
+    "file integrity monitor alert: read access to /etc/shadow from web-server uid",
+    "trace shows include() call with path-traversal payload: ../../../../etc/shadow",
+    "no preceding authorization event for this access"
+  ],
+  "summary": "Web process read /etc/shadow via local file inclusion. Credential exposure likely."
+}

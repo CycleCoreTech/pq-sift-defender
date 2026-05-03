@@ -1,0 +1,69 @@
+[project]
+name = "pq-sift-defender"
+version = "0.2.0"
+description = "AI-powered IR triage agent with PQ-signed audit trail and microsecond pre-filter"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [{name = "CycleCore Technologies LLC", email = "hi@cyclecore.ai"}]
+keywords = ["security", "incident-response", "post-quantum", "ai-agent", "dfir"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Information Technology",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Security",
+]
+
+dependencies = [
+  "ollama>=0.4,<1.0",
+  "cyclecore-pq>=0.3.0,<0.4",
+  "httpx>=0.27,<1.0",
+  "pydantic>=2.7,<3.0",
+  "structlog>=24.1",
+  "typer>=0.12,<1.0",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-asyncio>=0.23",
+  "pytest-httpx>=0.30",
+  "pytest-cov>=5.0",
+  "respx>=0.21",
+  "ruff>=0.6",
+  "mypy>=1.11",
+  "pre-commit>=3.8",
+]
+demo = ["rich>=13.7"]
+
+[project.scripts]
+pq-sift-defender = "pq_sift_defender.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/pq_sift_defender/cli.py" = ["B008"]
+"src/pq_sift_defender/sift_tools/*.py" = ["N818"]
+"tests/**/*.py" = ["SIM117"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: integration tests against real public APIs (rate-limited)"]
+addopts = "-m 'not live' --strict-markers"
+
+[tool.mypy]
+strict = true
+python_version = "3.10"

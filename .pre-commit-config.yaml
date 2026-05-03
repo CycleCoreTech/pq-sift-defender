@@ -1,0 +1,21 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: vocab
+        name: vocab
+        entry: scripts/check_vocab.sh
+        language: script
+        pass_filenames: true
+        types: [text]
+      - id: prepush
+        name: prepush
+        entry: scripts/check_pre_push.sh
+        language: script
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

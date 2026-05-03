@@ -1,0 +1,12 @@
+{
+  "alert_id": "EDR-2026-0203",
+  "severity": "low",
+  "host": "auth-01",
+  "process": "sshd",
+  "indicators": [
+    "successful login: alice from 10.0.4.12 via SSH key",
+    "successful login: alice from 10.0.4.12 via SSH key (52 sessions in 1h)",
+    "user matches expected baseline; source IP within corporate range"
+  ],
+  "summary": "Volume-anomaly threshold tripped on a known-good user"
+}

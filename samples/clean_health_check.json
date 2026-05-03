@@ -1,0 +1,12 @@
+{
+  "alert_id": "MON-2026-0514",
+  "severity": "informational",
+  "host": "api-prod-09",
+  "process": "uvicorn",
+  "indicators": [
+    "GET /health returned 200 in 1.2 ms",
+    "GET /metrics returned 200 in 4.8 ms (prometheus scraper, 10s cadence)",
+    "user-agent: kube-probe/1.30"
+  ],
+  "summary": "Routine kubernetes liveness/readiness check pattern. Reviewed because alert volume from this host crossed a threshold; on inspection the pattern is canonical."
+}

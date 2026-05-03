@@ -1,0 +1,7 @@
+{
+  "alert_id": "TEST-0001",
+  "severity": "high",
+  "host": "test-host",
+  "indicators": ["test_indicator_1", "test_indicator_2"],
+  "summary": "Synthetic test alert for unit/integration tests"
+}

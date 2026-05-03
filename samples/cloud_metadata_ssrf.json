@@ -1,0 +1,12 @@
+{
+  "alert_id": "WAF-2026-0511",
+  "severity": "high",
+  "host": "api-gateway-02",
+  "process": "envoy",
+  "indicators": [
+    "outbound HTTP request initiated by app pod to http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+    "request appears in URL parameter of /api/v2/fetch?url=http://169.254.169.254/",
+    "response payload contains AWS-style temporary credential JSON"
+  ],
+  "summary": "SSRF attempt targeting AWS instance metadata service. Application appears to take a user-controlled URL parameter without server-side validation."
+}

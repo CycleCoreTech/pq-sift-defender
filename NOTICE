@@ -1,0 +1,37 @@
+pq-sift-defender
+Copyright 2026 CycleCore Technologies LLC
+
+Licensed under the Apache License, Version 2.0 (the "License").
+
+PATENT GRANT SCOPE (Apache-2.0 §3 clarification)
+-------------------------------------------------
+The patent grant in Section 3 of the Apache License, Version 2.0, applies
+ONLY to patent claims of CycleCore Technologies LLC that are necessarily
+infringed by the contributions of CycleCore Technologies LLC to THIS WORK
+(pq-sift-defender) AS LICENSED.
+
+This grant DOES NOT extend to:
+- CycleCore's underlying patents related to the SecurityGates inference
+  architecture, post-quantum cryptography implementations, zero-exposure
+  signing protocols, or any other CycleCore product technology accessed
+  via the public APIs (sg-api.cyclecore.ai, pq-api.cyclecore.ai). These
+  patents remain subject to their own terms and are NOT licensed by
+  inclusion of this work.
+- Any rights beyond those necessary to use, reproduce, modify, and
+  distribute pq-sift-defender's own source code in accordance with the
+  Apache License, Version 2.0.
+
+Use of the public CycleCore APIs is governed by the terms published at
+https://cyclecore.ai, NOT by this License.
+
+THIRD-PARTY DEPENDENCIES
+------------------------
+This product includes software developed by:
+- cyclecore-pq (MIT License) — https://pypi.org/project/cyclecore-pq/
+- ollama-python (MIT License) — https://github.com/ollama/ollama-python
+- httpx (BSD-3-Clause) — https://github.com/encode/httpx
+- typer (MIT License) — https://github.com/fastapi/typer
+- structlog (Apache-2.0) — https://github.com/hynek/structlog
+- pydantic (MIT License) — https://github.com/pydantic/pydantic
+
+For full license texts, see each project's repository.

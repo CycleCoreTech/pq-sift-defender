@@ -1,0 +1,12 @@
+{
+  "alert_id": "EDR-2026-0091",
+  "severity": "medium",
+  "host": "files-02",
+  "process": "nginx",
+  "indicators": [
+    "GET /api/v1/files?name=../../../../etc/passwd",
+    "GET /api/v1/files?name=..%2f..%2f..%2fetc%2fshadow",
+    "User-Agent: curl/8.9.1 from suspicious IP 198.51.100.77"
+  ],
+  "summary": "Repeated path-traversal attempts from a single source"
+}
