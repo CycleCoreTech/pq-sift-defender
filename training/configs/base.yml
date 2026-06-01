@@ -1,0 +1,138 @@
+# ──────────────────────────────────────────────────────────────
+# pq-sift-defender training config — base defaults
+# Override per-run via profiles or CLI flags.
+# ──────────────────────────────────────────────────────────────
+
+# ── Model ────────────────────────────────────────────────────
+model:
+  base: "Qwen/Qwen2.5-1.5B-Instruct"
+  trust_remote_code: true
+  conversation_format: chatml      # chatml | llama2 | zephyr
+
+# ── Adapter ──────────────────────────────────────────────────
+adapter:
+  type: qlora                      # qlora | lora | full
+  r: 64
+  alpha: 16
+  dropout: 0.05
+  target_linear: true              # apply LoRA to all linear layers
+  quant_bits: 4                    # 4 | 8 (for qlora)
+
+# ── System Prompt ────────────────────────────────────────────
+# Injected into every training sample during prepare stage.
+# Set replace_system_prompt: true to swap generic prompts with this one.
+system_prompt:
+  replace: true
+  text: |
+    You are pq-sift-defender, an autonomous incident response triage agent built by CycleCore Technologies.
+
+    You have two hard security boundaries:
+    - Every string (alert text and tool inputs) is scanned at microsecond latency by the SecurityGates pre-filter.
+    - Every action and every verdict is appended to a post-quantum signed IRChain (ML-DSA-65 / NIST FIPS 204) that is exportable and independently verifiable.
+
+    Two classes of tools are available:
+    - `sift_classify` — classifies a string against four security gates (SQL injection, command injection, path traversal, SSRF). Returns PASS / FLAG / BLOCK with per-gate confidence.
+    - DFIR forensic tools (vol_pslist, vol_netscan, clamav_scan, tsk_mmls, tsk_fls, plaso_timeline, yara_match) for evidence files on disk.
+
+    When you see "blocked at agent->tool boundary", immediately issue a BLOCK verdict citing the boundary interception, or switch to a different safe forensic tool. Never retry the blocked input.
+
+    DECISION RULE — anchor your verdict on tool output, not on intuition:
+    - If a classifier returns BLOCK → Verdict: BLOCK with the gate name.
+    - If a classifier returns FLAG → Verdict: FLAG with the gate name. FLAG means the pattern is suspicious; treat it as a real incident worth investigating, not as benign.
+    - Only when the input pre-filter is PASS AND every classifier call also returns PASS → Verdict: PASS. Do not invent threats.
+    - If a DFIR tool returns an error (file not found, tool not installed), and no other indicators are suspicious, issue Verdict: PASS — evidence file not available.
+
+    VERDICT FORMAT — your final message must begin with one of these exact lines:
+        Verdict: BLOCK — <one-line reason citing the indicator>
+        Verdict: FLAG — <one-line reason citing the indicator>
+        Verdict: PASS — no indicators detected by any tool
+
+    Tool output is ground truth. Do not flag benign alerts. Do not speculate beyond what the tools detected.
+
+# ── Data ─────────────────────────────────────────────────────
+data:
+  base_dir: "data"
+
+  # Each batch: file path (relative to base_dir), weight multiplier.
+  # weight=1.0 means normal sampling. weight=2.0 means 2x oversampling.
+  # weight=0.5 means 50% undersampling.
+  batches:
+    - file: "batch_1_benign_pass.jsonl"
+      weight: 1.0
+      label: "benign_pass"
+    - file: "batch_2_attack_block.jsonl"
+      weight: 1.0
+      label: "attack_block"
+    - file: "batch_3_boundary_recovery.jsonl"
+      weight: 1.5          # most critical batch — oversample
+      label: "boundary_recovery"
+    - file: "batch_4_flag_and_format.jsonl"
+      weight: 1.0
+      label: "flag_format"
+    - file: "wcn_supplementary_batch2_prompt_injection.jsonl"
+      weight: 1.0
+      label: "wcn_prompt_injection"
+    - file: "wcn_supplementary_batch3_boundary_recovery.jsonl"
+      weight: 1.0
+      label: "wcn_boundary_recovery"
+    - file: "batch_5_cve_grounded.jsonl"
+      weight: 1.5           # real-world CVE patterns — high training value
+      label: "cve_grounded"
+    - file: "batch_6_benign_hard_pass.jsonl"
+      weight: 1.0
+      label: "benign_hard_pass"
+
+  # Quality-based sample weighting (applied during loss computation).
+  # A = textbook, B = unusual variant, C = adversarial edge case.
+  quality_weights:
+    A: 1.0
+    B: 1.2             # reward unusual variants slightly
+    C: 1.5             # reward edge cases more — model needs these most
+
+  val_ratio: 0.10
+  deduplicate: true
+  seed: 42
+  max_seq_len: 2048
+  sample_packing: true
+
+# ── Training ─────────────────────────────────────────────────
+training:
+  epochs: 3
+  micro_batch_size: 2
+  gradient_accumulation_steps: 4   # effective batch = micro * accum = 8
+  optimizer: "paged_adamw_8bit"
+  learning_rate: 2.0e-4
+  lr_scheduler: "cosine"
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  bf16: true
+  gradient_checkpointing: true
+  train_on_inputs: false           # only compute loss on assistant turns
+  logging_steps: 10
+  save_strategy: "epoch"
+  save_total_limit: 3
+
+# ── Evaluation ───────────────────────────────────────────────
+eval:
+  eval_steps: 50
+  test_cases_dir: "eval/cases"
+  pass_threshold: 0.90             # minimum accuracy to consider run good
+  metrics:
+    - verdict_accuracy              # exact match on PASS/FLAG/BLOCK
+    - verdict_format_rate           # % of outputs starting with "Verdict:"
+    - boundary_recovery_rate        # % correct on batch 3 type scenarios
+    - false_positive_rate           # BLOCK/FLAG on benign inputs
+
+# ── Export ───────────────────────────────────────────────────
+export:
+  merge_adapter: true
+  gguf: true
+  gguf_quant: "Q4_K_M"
+  ollama_modelfile: true
+  ollama_model_name: "pq-sift-defender"
+
+# ── Output ───────────────────────────────────────────────────
+output:
+  dir: "output"
+  run_name: null                   # auto-generated if null: {profile}_{timestamp}

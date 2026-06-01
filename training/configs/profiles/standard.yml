@@ -1,0 +1,4 @@
+# Standard profile — production training run
+# ~15-20 min on RTX 4080 SUPER
+_profile: standard
+_parent: base

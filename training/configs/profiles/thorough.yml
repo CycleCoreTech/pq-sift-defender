@@ -1,0 +1,48 @@
+# Thorough profile — best quality, longest run
+# ~25 min on RTX 5070Ti
+_profile: thorough
+_parent: base
+
+training:
+  epochs: 5
+  micro_batch_size: 1
+  gradient_accumulation_steps: 8
+  learning_rate: 1.0e-4
+  warmup_ratio: 0.05
+  weight_decay: 0.02
+
+adapter:
+  r: 64
+  alpha: 16
+
+data:
+  batches:
+    - file: "batch_1_benign_pass.jsonl"
+      weight: 1.8          # boosted — compensate for BLOCK-heavy dataset
+      label: "benign_pass"
+    - file: "batch_2_attack_block.jsonl"
+      weight: 1.0
+      label: "attack_block"
+    - file: "batch_3_boundary_recovery.jsonl"
+      weight: 1.5
+      label: "boundary_recovery"
+    - file: "batch_4_flag_and_format.jsonl"
+      weight: 1.0
+      label: "flag_format"
+    - file: "wcn_supplementary_batch2_prompt_injection.jsonl"
+      weight: 1.0
+      label: "wcn_prompt_injection"
+    - file: "wcn_supplementary_batch3_boundary_recovery.jsonl"
+      weight: 1.0
+      label: "wcn_boundary_recovery"
+    - file: "batch_5_cve_grounded.jsonl"
+      weight: 1.3
+      label: "cve_grounded"
+    - file: "batch_6_benign_hard_pass.jsonl"
+      weight: 1.8          # heavy boost — "looks suspicious but benign" is the weak spot
+      label: "benign_hard_pass"
+
+  quality_weights:
+    A: 1.0
+    B: 1.5
+    C: 2.0             # heavily reward edge cases

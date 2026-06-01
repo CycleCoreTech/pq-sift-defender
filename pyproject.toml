@@ -58,6 +58,7 @@ select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
 "src/pq_sift_defender/cli.py" = ["B008"]
 "src/pq_sift_defender/sift_tools/*.py" = ["N818"]
 "tests/**/*.py" = ["SIM117"]
+"training/**/*.py" = ["E501", "E741", "F541", "F841", "SIM115", "SIM210", "B007", "E402", "RUF005"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

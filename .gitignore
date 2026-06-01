@@ -29,6 +29,16 @@ data/cache/
 htmlcov/
 .coverage
 
+# Training artifacts (weights, cache, prepared data)
+training/output/
+training/cve_cache/
+training/data/prepared/
+training/data/all_merged.jsonl
+training/data/train.jsonl
+training/data/val.jsonl
+*.gguf
+*.safetensors
+
 # Internal sprint / context / notes — never committed
 _sprint/
 _internal/

@@ -1,0 +1,19 @@
+# Fast iteration profile — quick feedback loop
+# ~5 min on RTX 4080 SUPER
+_profile: fast
+_parent: base
+
+training:
+  epochs: 1
+  micro_batch_size: 2
+  gradient_accumulation_steps: 4
+  learning_rate: 3.0e-4
+  warmup_ratio: 0.05
+
+adapter:
+  r: 32
+  alpha: 8
+
+export:
+  gguf: false
+  ollama_modelfile: false
