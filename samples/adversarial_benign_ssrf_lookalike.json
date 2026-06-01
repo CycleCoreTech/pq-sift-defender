@@ -1,0 +1,11 @@
+{
+  "alert_id": "EDR-2026-FAKE-SSRF-01",
+  "severity": "high",
+  "host": "api-08",
+  "process": "application",
+  "indicators": [
+    "outbound request to http://169.254.169.254/latest/meta-data (but blocked by VPC metadata proxy)",
+    "request originated from AWS Lambda internal health check"
+  ],
+  "summary": "AWS internal metadata service call from Lambda. Expected and blocked at VPC level."
+}

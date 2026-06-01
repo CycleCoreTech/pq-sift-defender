@@ -1,0 +1,12 @@
+{
+  "alert_id": "MON-2026-K8S-01",
+  "severity": "informational",
+  "host": "kube-worker-14",
+  "process": "kubelet",
+  "indicators": [
+    "health check GET /healthz to 10.0.42.17:10250",
+    "kube-probe/1.30 user-agent",
+    "internal cluster IP range"
+  ],
+  "summary": "Kubernetes liveness probe. Expected internal traffic."
+}

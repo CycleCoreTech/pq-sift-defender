@@ -41,7 +41,7 @@ sleep 28
 # --- Prompt injection — Scene 3 (audio: ~62s, agent ~5s) -----------------
 # Narration: "Now the case that matters..." — THE MONEY SHOT
 script -q -c "pq-sift-defender investigate samples/prompt_injection_alert.json" "$INV2_OUT"
-sleep 66
+sleep 64
 
 CHAIN_ID="$(grep -oE '[0-9a-f]{32}' "$INV2_OUT" | head -1)"
 if [ -z "${CHAIN_ID:-}" ]; then

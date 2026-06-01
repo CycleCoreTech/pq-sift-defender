@@ -1,0 +1,13 @@
+{
+  "alert_id": "EDR-2026-DUMP-BAK-01",
+  "severity": "medium",
+  "host": "sec-mon-03",
+  "process": "backup-agent",
+  "indicators": [
+    "memory dump copied from /proc/kcore to /backup/dumps/prod-2026-05-31.vmem",
+    "file size 512 MB, SHA256 verified",
+    "destination path in approved backup directory"
+  ],
+  "summary": "Scheduled memory dump backup for offline forensics readiness. Legitimate internal process.",
+  "memory_dump_path": "/backup/dumps/prod-2026-05-31.vmem"
+}

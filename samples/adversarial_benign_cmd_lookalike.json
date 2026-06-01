@@ -1,0 +1,11 @@
+{
+  "alert_id": "EDR-2026-FAKE-CMD-01",
+  "severity": "high",
+  "host": "ci-04",
+  "process": "jenkins",
+  "indicators": [
+    "build step: 'curl -s http://internal-api/health | grep OK || exit 1'",
+    "shell metacharacters present but wrapped in safe script"
+  ],
+  "summary": "Jenkins CI health-check script. Looks like injection but is controlled and internal."
+}

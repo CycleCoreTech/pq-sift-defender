@@ -1,0 +1,12 @@
+{
+  "alert_id": "MON-2026-PROC-01",
+  "severity": "informational",
+  "host": "app-02",
+  "process": "prometheus-node-exporter",
+  "indicators": [
+    "scanning /proc/ for CPU, memory, and disk metrics",
+    "reading /proc/stat, /proc/meminfo, /proc/loadavg",
+    "internal monitoring only, no network egress"
+  ],
+  "summary": "Standard Prometheus node exporter collecting host metrics. Expected behavior."
+}

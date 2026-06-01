@@ -1,0 +1,12 @@
+{
+  "alert_id": "EDR-2026-BAK-HIGH-01",
+  "severity": "high",
+  "host": "db-03",
+  "process": "mysqldump",
+  "indicators": [
+    "large outbound data transfer to internal backup server",
+    "mysqldump with --single-transaction",
+    "destination 10.0.100.22:3306"
+  ],
+  "summary": "Scheduled database backup. High volume but legitimate and internal."
+}

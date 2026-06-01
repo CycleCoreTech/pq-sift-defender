@@ -1,0 +1,12 @@
+{
+  "alert_id": "EDR-2026-LOGROT-01",
+  "severity": "low",
+  "host": "auth-prod-07",
+  "process": "logrotate",
+  "indicators": [
+    "log rotation started on /var/log/auth.log",
+    "rotated /var/log/auth.log.1 to /var/log/auth.log.2",
+    "new log file created at /var/log/auth.log"
+  ],
+  "summary": "Routine daily log rotation by logrotate daemon. No user interaction or anomalous activity."
+}

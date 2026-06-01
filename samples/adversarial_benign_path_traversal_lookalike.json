@@ -1,0 +1,11 @@
+{
+  "alert_id": "EDR-2026-FAKE-TRAV-01",
+  "severity": "medium",
+  "host": "web-11",
+  "process": "nginx",
+  "indicators": [
+    "GET /api/v1/files?name=../../../../../var/log/auth.log",
+    "but path is rewritten by nginx to safe internal log viewer"
+  ],
+  "summary": "Internal log viewer tool using relative paths for admin UI. Safe after rewrite."
+}

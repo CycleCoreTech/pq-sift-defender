@@ -1,0 +1,12 @@
+{
+  "alert_id": "EDR-2026-MON-IP-01",
+  "severity": "low",
+  "host": "net-mon-05",
+  "process": "zabbix-agent",
+  "indicators": [
+    "outbound connection to internal monitoring server 192.168.10.55:10050",
+    "Zabbix agent heartbeat",
+    "no external DNS or suspicious domains"
+  ],
+  "summary": "Standard Zabbix agent heartbeat to internal monitoring server."
+}

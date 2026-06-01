@@ -7,6 +7,7 @@ Apache 2.0. Runs a 1.5-billion-parameter open-weight model on CPU. No GPU requir
 
 [![Submission video](https://img.shields.io/badge/submission-video-blue)](demo/submission-video.mp4)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+[![Model on HF](https://img.shields.io/badge/model-HuggingFace-yellow)](https://huggingface.co/CycleCoreTechnologies/pq-sift-defender-Q4_K_M)
 
 ![demo](demo/demo-1x.gif)
 
@@ -79,35 +80,58 @@ LLM, the DFIR tools, and the agent loop are all local.
 
 ## Evaluation
 
-Ten sample alerts spanning benign logins, SSRF, SQL injection, command injection,
-path traversal, prompt injection, and malware memory dumps. All ten produce correct
-verdicts with zero false positives.
+Validated on 136 held-out samples spanning benign system events, SSRF, SQL injection,
+command injection, path traversal, prompt injection, CVE-grounded attacks, boundary
+recovery, and malware memory dumps.
 
 ```
-10/10 correct · 0 false positives · 4 s per triage · CPU-only · Apache 2.0
+96.3% accuracy · 100% BLOCK · 94.6% PASS · 11 s per triage · CPU-only · Apache 2.0
 ```
+
+| Verdict | Accuracy | Notes |
+|---|---|---|
+| BLOCK | 100% (72/72) | Zero missed attacks |
+| FLAG | 75% (6/8) | Small sample; tool-call format leakage on 2 edge cases |
+| PASS | 94.6% (53/56) | 3 failures on adversarial quality-C edge cases |
 
 Tested on two CPUs with identical results:
 
-| CPU | Simple triage | 10-case average |
+| CPU | Inference | GPU required |
 |---|---|---|
-| Intel Core i9-14900KF | 4 s | 14.5 s |
-| AMD Ryzen 7 7800X3D | 4 s | — |
+| Intel Core i9-14900KF | 4 s | No |
+| AMD Ryzen 7 7800X3D | 11 s | No |
 
 Full results: [`docs/accuracy.md`](docs/accuracy.md). A static proof artifact at
 [`samples/audit_chain_export.json`](samples/audit_chain_export.json) shows a real
 signed audit chain from a real investigation — `verify.valid=True`, three entries,
 each with a 3,309-byte ML-DSA-65 signature, hash-linked.
 
-## Model selection
+## Model
 
-We evaluated six model variants across the qwen2.5, qwen3, and qwen3.5 families.
-The qwen2.5:1.5b consistently outperforms newer "thinking" models on this workload
-because the task is structured tool-calling, not deep reasoning. Thinking-mode models
-(qwen3, qwen3.5) generate extensive internal reasoning tokens that multiply CPU
-latency by 5-17x and frequently produce false positives by overthinking benign alerts.
-Smaller models (qwen2.5:0.5b) cannot reliably produce structured tool calls. The
-1.5B parameter count is the floor for reliable function-calling on CPU.
+The agent uses a QLoRA fine-tuned Qwen2.5-1.5B-Instruct, served locally via Ollama
+at Q4_K_M quantization (986 MB on disk). Pre-built GGUF available on
+[HuggingFace](https://huggingface.co/CycleCoreTechnologies/pq-sift-defender-Q4_K_M). The base model was chosen because 1.5B is
+the floor for reliable structured tool-calling on CPU — smaller models can't produce
+consistent function calls, and newer "thinking" models (qwen3, qwen3.5) multiply
+latency 5-17x by generating internal reasoning tokens the task doesn't need.
+
+Fine-tuning was performed with a config-driven training pipeline on 785 unique
+ShareGPT-format training samples across 7 source batches:
+
+| Batch | Count | Description |
+|---|---|---|
+| Benign PASS | 150 | Clean system events that should not trigger alerts |
+| Attack BLOCK | 210 | SQL injection, command injection, SSRF, path traversal |
+| Boundary recovery | 163 | Prompt injection → agent-tool boundary interception |
+| FLAG + format | 150 | Suspicious patterns requiring investigation |
+| CVE-grounded | 62 | Real-world CVEs from CISA KEV catalog (Log4Shell, ProxyShell, etc.) |
+| Hard PASS | 50 | Adversarial benign — looks suspicious but is legitimate |
+
+The pipeline supports per-batch oversampling weights, per-sample quality-based loss
+scaling (A/B/C tiers), hash-based deduplication, and system prompt injection at
+prepare time. Three training profiles (fast/standard/thorough) are provided.
+
+To reproduce or extend: see [`training/`](training/).
 
 ## Try it out
 
@@ -117,10 +141,24 @@ See [`docs/try-it-out.md`](docs/try-it-out.md) for the full setup guide.
 git clone https://github.com/CycleCoreTech/pq-sift-defender
 cd pq-sift-defender
 pip install -e ".[dev]"
-cp .env.example .env  # add CYCLECORE_PQ_API_KEY (free tier — 1k ops/day)
+cp .env.example .env
 
-ollama pull qwen2.5:1.5b
+# Get a free PQ API key (1k ops/day, one curl):
+curl -sX POST https://pq-api.cyclecore.ai/v1/auth/register \
+  -H "Content-Type: application/json" -d '{"email": "you@example.com"}'
+# Paste the returned api_key into .env as CYCLECORE_PQ_API_KEY
+# (or skip this and run fully offline with: PQ_AUDIT_BACKEND=stub)
+
+ollama pull qwen2.5:1.5b              # base model (works out of the box)
 pq-sift-defender investigate samples/path_traversal.json
+
+# Optional: use the fine-tuned model for higher accuracy (96.3% vs ~80%)
+# Download the GGUF from HuggingFace:
+# https://huggingface.co/CycleCoreTechnologies/pq-sift-defender-Q4_K_M
+# wget https://huggingface.co/CycleCoreTechnologies/pq-sift-defender-Q4_K_M/resolve/main/pq-sift-defender-Q4_K_M.gguf
+# wget https://huggingface.co/CycleCoreTechnologies/pq-sift-defender-Q4_K_M/resolve/main/Modelfile
+# ollama create pq-sift-defender -f Modelfile
+# PQ_SIFT_MODEL=pq-sift-defender pq-sift-defender investigate samples/path_traversal.json
 ```
 
 ## Fully offline / air-gapped mode

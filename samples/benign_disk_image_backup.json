@@ -1,0 +1,12 @@
+{
+  "alert_id": "EDR-2026-BAK-IMG-01",
+  "severity": "low",
+  "host": "files-09",
+  "process": "rsync",
+  "indicators": [
+    "rsync of /data/server.img to /backup/server-2026-05-31.img",
+    "path contains .img extension but is a known VM disk image",
+    "source and destination both on approved storage volumes"
+  ],
+  "summary": "Routine nightly VM disk image backup. Clean internal operation."
+}

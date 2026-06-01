@@ -30,7 +30,7 @@ Now we verify the audit trail independently.
 
 This calls the public post-quantum signing API, which checks every entry's signature and hash linkage.
 
-Valid. Three entries. Each signed with ML-DSA-65 — that's NIST FIPS 204, the post-quantum digital signature standard finalized in 2024. These signatures resist quantum cryptanalysis. The audit trail remains verifiable and admissible decades from now.
+Valid. Three entries. Each signed with ML-DSA-65 — that's NIST FIPS 204, the post-quantum digital signature standard finalized in 2024. These signatures resist quantum cryptanalysis. The logs are designed to remain immutable and independently verifiable.
 
 Any third party can repeat this verification with just the chain ID.
 
