@@ -3,7 +3,7 @@
 **Date**: 2026-05-31
 **Build**: v0.2.0 (commit ed3a00c + local changes)
 **Model**: qwen2.5:1.5b (CPU-only, Ollama)
-**Hardware**: Intel Core i9-14900KF (dev rig)
+**Hardware**: Intel Core i9-14900KF
 
 ## Changes Since Last Push
 
