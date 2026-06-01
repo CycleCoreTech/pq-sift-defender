@@ -230,6 +230,12 @@ def investigate(
         "-b",
         help="Executive summary: only the verdict line, skip the reasoning prose.",
     ),
+    thorough: bool = typer.Option(
+        False,
+        "--thorough",
+        "-T",
+        help="Require at least one DFIR tool call before accepting a verdict.",
+    ),
 ) -> None:
     """Investigate an alert and print the verdict + audit chain summary."""
     load_dotenv()
@@ -245,7 +251,7 @@ def investigate(
         sift = SiftPrefilter(sg)
         chain = IRChain(pq=pq)
         agent = IRAgent(sift=sift, chain=chain, on_progress=on_progress)
-        verdict = agent.investigate(alert)
+        verdict = agent.investigate(alert, thorough=thorough)
 
     scene_banner("Verdict")
     _print_verdict(verdict.text, brief=brief)

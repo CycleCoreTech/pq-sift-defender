@@ -17,7 +17,12 @@ from typing import Any
 
 from ollama import Client
 
-from pq_sift_defender.agent.prompts import BLOCKED_RECOVERY_PROMPT, SYSTEM_PROMPT
+from pq_sift_defender.agent.prompts import (
+    BLOCKED_RECOVERY_PROMPT,
+    INVESTIGATE_NUDGE_PROMPT,
+    SYSTEM_PROMPT,
+    VERDICT_FORMAT_NUDGE,
+)
 from pq_sift_defender.agent.tools import ALL_TOOLS_OPENAI_FORMAT
 from pq_sift_defender.audit.chain import IRChain
 from pq_sift_defender.sift.prefilter import SiftPrefilter
@@ -229,6 +234,31 @@ def _harvest_attacks(
     return out
 
 
+def _is_safe_absolute_path(value: str, decision: Any) -> bool:
+    """Allow absolute filesystem paths that don't contain traversal sequences.
+
+    The SecurityGates path_traversal gate fires on any string containing
+    common filesystem path components (/var/, /etc/, /proc/). This is
+    correct for attack payloads like ``../../etc/passwd`` but produces
+    false positives on legitimate absolute paths like ``/var/log/auth.log``
+    that a DFIR tool legitimately needs to access.
+
+    Returns True (safe, let it through) when:
+    - The value starts with ``/`` (absolute path)
+    - The value contains no traversal sequences (``..``)
+    - The only gate that fired is ``path_traversal``
+    """
+    if not value.startswith("/"):
+        return False
+    if ".." in value:
+        return False
+    flags = getattr(decision.scan, "flags", []) or []
+    detected_gates = [
+        f.gate for f in flags if getattr(f, "detected", False) and f.gate != "path_traversal"
+    ]
+    return len(detected_gates) == 0
+
+
 class IRAgent:
     """Minimal tool-use loop. Single tool: sift_classify."""
 
@@ -271,7 +301,7 @@ class IRAgent:
             self._plaso = None
         self._yara = YARAClient()
 
-    def investigate(self, alert: dict[str, Any]) -> Verdict:
+    def investigate(self, alert: dict[str, Any], *, thorough: bool = False) -> Verdict:
         t0 = time.time()
         gate = self._sift.check_dict(alert)
         blocked = 0 if gate.allow else 1
@@ -312,6 +342,13 @@ class IRAgent:
             {"role": "user", "content": _format_alert(alert, gate.scan.recommendation)},
         ]
         tool_calls = 0
+        dfir_tool_calls = 0
+        has_evidence_paths = bool(_detect_evidence_paths(alert))
+        has_dfir_fields = any(
+            k in alert for k in ("memory_dump_path", "disk_image_path", "image_path", "pcap_path")
+        )
+        nudged = False
+        verdict_nudged = False
         transcript: list[dict[str, Any]] = []
 
         for _ in range(MAX_TURNS):
@@ -354,7 +391,25 @@ class IRAgent:
 
             tc_list = _get_tool_calls(msg)
             if not tc_list:
+                require_dfir = thorough or has_evidence_paths or has_dfir_fields
+                if dfir_tool_calls == 0 and require_dfir and not nudged:
+                    nudged = True
+                    messages.append({"role": "assistant", "content": _get_content(msg) or ""})
+                    messages.append({"role": "user", "content": INVESTIGATE_NUDGE_PROMPT})
+                    continue
                 final_text = _get_content(msg)
+                if not re.search(r"Verdict:\s*(PASS|FLAG|BLOCK)", final_text, re.IGNORECASE):
+                    if not verdict_nudged:
+                        verdict_nudged = True
+                        messages.append({"role": "assistant", "content": final_text})
+                        messages.append({"role": "user", "content": VERDICT_FORMAT_NUDGE})
+                        continue
+                    if blocked > 0:
+                        final_text = f"Verdict: BLOCK — {final_text}"
+                    elif gate.scan.recommendation in ("BLOCK", "FLAG"):
+                        final_text = f"Verdict: FLAG — {final_text}"
+                    else:
+                        final_text = f"Verdict: PASS — {final_text}"
                 verdict_result = self._chain.append(
                     "verdict", {"text": final_text, "tool_calls": tool_calls}
                 )
@@ -393,6 +448,8 @@ class IRAgent:
             for tc in tc_list:
                 tool_calls += 1
                 name = _tool_name(tc)
+                if name != "sift_classify":
+                    dfir_tool_calls += 1
                 args = _tool_args(tc)
                 self._on_progress(
                     "tool_call",
@@ -456,6 +513,8 @@ class IRAgent:
                     continue
                 decision = self._sift.check_text(arg_val)
                 if decision.scan.recommendation not in ("BLOCK", "FLAG"):
+                    continue
+                if _is_safe_absolute_path(arg_val, decision):
                     continue
                 self._chain.append(
                     "blocked_tool_input",
@@ -880,10 +939,47 @@ def _get_content(msg: Any) -> str:
     return getattr(msg, "content", "") or ""
 
 
+_TOOL_NAMES = frozenset(
+    [
+        "sift_classify",
+        "vol_pslist",
+        "vol_netscan",
+        "clamav_scan",
+        "tsk_mmls",
+        "tsk_fls",
+        "plaso_timeline",
+        "yara_match",
+    ]
+)
+
+
+def _parse_raw_tool_call(content: str) -> list[dict[str, Any]]:
+    """Parse tool calls from raw JSON in message content.
+
+    The fine-tuned model emits {"name": ..., "arguments": {...}} directly
+    rather than using Ollama's <tool_call> XML wrapper.
+    """
+    if not content:
+        return []
+    text = content.strip()
+    try:
+        obj = json.loads(text)
+    except json.JSONDecodeError:
+        return []
+    if isinstance(obj, dict) and obj.get("name") in _TOOL_NAMES and "arguments" in obj:
+        return [{"function": {"name": obj["name"], "arguments": obj["arguments"]}}]
+    return []
+
+
 def _get_tool_calls(msg: Any) -> list[Any]:
     if isinstance(msg, dict):
-        return msg.get("tool_calls") or []
-    return getattr(msg, "tool_calls", None) or []
+        tc = msg.get("tool_calls") or []
+    else:
+        tc = getattr(msg, "tool_calls", None) or []
+    if tc:
+        return tc
+    content = _get_content(msg)
+    return _parse_raw_tool_call(content)
 
 
 def _tool_name(tc: Any) -> str:

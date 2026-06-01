@@ -2,6 +2,23 @@
 
 from __future__ import annotations
 
+VERDICT_FORMAT_NUDGE = (
+    "Your response must begin with exactly one of these lines:\n"
+    "  Verdict: PASS — <reason>\n"
+    "  Verdict: FLAG — <reason>\n"
+    "  Verdict: BLOCK — <reason>\n"
+    "If the evidence file was not found, that is not suspicious — "
+    "issue Verdict: PASS. Do not ask questions or request corrections."
+)
+
+INVESTIGATE_NUDGE_PROMPT = (
+    "You must call at least one DFIR tool before issuing a verdict. "
+    "Check the alert for any file paths, memory dump paths, or disk "
+    "image paths and call the appropriate tool (vol_pslist, tsk_fls, "
+    "clamav_scan, yara_match, plaso_timeline). Use the tool-call "
+    "mechanism — do not write the call in text."
+)
+
 BLOCKED_RECOVERY_PROMPT = (
     "The security boundary blocked your previous tool input because it matched "
     "a known attack pattern (SSRF, injection, traversal, or command injection). "
