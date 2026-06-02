@@ -168,6 +168,8 @@ def run_one(alert_path: Path, use_live_chain: bool) -> dict[str, Any]:
         "elapsed_s": round(elapsed, 1),
         "tool_calls": verdict.tool_calls,
         "blocked_inputs": verdict.blocked_inputs,
+        "prompt_tokens": verdict.prompt_tokens,
+        "completion_tokens": verdict.completion_tokens,
         "attack_techniques": verdict.attack_techniques,
         "verdict_text": verdict.text,
         "verdict_text_truncated": verdict.text[:200],

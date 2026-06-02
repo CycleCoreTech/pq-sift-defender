@@ -261,6 +261,9 @@ def investigate(
     print(_kv("chain_id:", str(verdict.chain_id)))
     print(_kv("tool calls:", str(verdict.tool_calls)))
     print(_kv("blocks:", str(verdict.blocked_inputs)))
+    if verdict.prompt_tokens or verdict.completion_tokens:
+        pt, ct = verdict.prompt_tokens, verdict.completion_tokens
+        print(_kv("tokens:", f"{pt + ct} ({pt} prompt + {ct} completion)"))
     print()
 
 

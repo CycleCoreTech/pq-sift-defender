@@ -65,6 +65,9 @@ third party can repeat the verification with just the chain ID.
 
 ## Architecture
 
+Built as a comparable agentic architecture (custom Python + Ollama) tightly
+integrated with the full SANS SIFT toolchain.
+
 ![Architecture](docs/images/architecture.png)
 
 See [`docs/architecture.md`](docs/architecture.md) for component details and

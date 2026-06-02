@@ -67,6 +67,8 @@ class Verdict:
     blocked_inputs: int = 0
     transcript: list[dict[str, Any]] = field(default_factory=list)
     attack_techniques: list[dict[str, str]] = field(default_factory=list)
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
 
 
 # --- MITRE ATT&CK enterprise technique mappings -----------------------------
@@ -350,6 +352,8 @@ class IRAgent:
         nudged = False
         verdict_nudged = False
         transcript: list[dict[str, Any]] = []
+        prompt_tokens = 0
+        completion_tokens = 0
 
         for _ in range(MAX_TURNS):
             try:
@@ -384,9 +388,17 @@ class IRAgent:
                     blocked_inputs=blocked,
                     transcript=transcript,
                     attack_techniques=list(attacks.values()),
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
                 )
 
             msg = response.get("message", {}) if isinstance(response, dict) else response.message
+            if isinstance(response, dict):
+                prompt_tokens += response.get("prompt_eval_count", 0)
+                completion_tokens += response.get("eval_count", 0)
+            else:
+                prompt_tokens += getattr(response, "prompt_eval_count", 0) or 0
+                completion_tokens += getattr(response, "eval_count", 0) or 0
             transcript.append({"message": _msg_to_dict(msg)})
 
             tc_list = _get_tool_calls(msg)
@@ -435,6 +447,8 @@ class IRAgent:
                     blocked_inputs=blocked,
                     transcript=transcript,
                     attack_techniques=list(attacks.values()),
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
                 )
 
             messages.append(
@@ -496,6 +510,8 @@ class IRAgent:
             blocked_inputs=blocked,
             attack_techniques=list(attacks.values()),
             transcript=transcript,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
         )
 
     def _dispatch_tool(self, name: str, args: dict[str, Any]) -> str:
