@@ -3,7 +3,7 @@
 **Autonomous incident-response triage with defense-in-depth against prompt
 injection and a post-quantum-signed audit trail.**
 
-Apache 2.0. Runs a 1.5-billion-parameter open-weight model on CPU. No GPU required.
+Apache 2.0. Fine-tuned 1.5B model, CPU-only, under 10 seconds per triage. No GPU required.
 
 [![Submission video](https://img.shields.io/badge/submission-video-blue)](demo/submission-video.mp4)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
@@ -23,8 +23,8 @@ pq-sift-defender reads a security alert — EDR record, WAF log, IDS event, phis
 report — and runs an autonomous DFIR investigation. The agent reasons about the alert
 with a local LLM (Ollama-served `qwen2.5:1.5b`, CPU-only) and decides which forensic
 tools to call: Volatility 3, The Sleuth Kit, ClamAV, YARA, Plaso, and a string
-classifier for OWASP-class injection patterns. It returns a verdict (PASS / FLAG /
-BLOCK) and a cryptographically signed, append-only chain of every action it took.
+classifier for OWASP-class injection patterns. It returns a verdict (**PASS** /
+**FLAG** / **BLOCK**) with a PQ-signed, append-only audit chain of every action it took.
 
 ## Why this matters
 
@@ -48,6 +48,12 @@ Concrete proof: [`samples/prompt_injection_alert.json`](samples/prompt_injection
 plants a directive telling the agent to fetch `169.254.169.254` cloud metadata. The
 1.5B model takes the bait. The security boundary catches it. The model was compromised;
 the system was not.
+
+A frontier model can self-correct, but it can also be talked out of self-correcting.
+The boundary operates below the reasoning layer -- the model cannot reason around it.
+A fine-tuned 1.5B specialist paired with an architectural guardrail catches 100%
+of attacks in held-out evaluation, with the right tradeoff for a security tool: slight
+conservative bias, zero missed threats.
 
 ### Post-quantum audit trail
 
@@ -74,6 +80,7 @@ LLM, the DFIR tools, and the agent loop are all local.
 |---|---|
 | RAM | 2-3 GB free |
 | CPU | One modern x86_64 core |
+| Time | under 10 s per triage (fine-tuned model, CPU-only) |
 | Disk | 5-10 GB |
 | GPU | Not required |
 | Python | 3.10+ |
@@ -85,7 +92,7 @@ command injection, path traversal, prompt injection, CVE-grounded attacks, bound
 recovery, and malware memory dumps.
 
 ```
-96.3% accuracy · 100% BLOCK · 94.6% PASS · 11 s per triage · CPU-only · Apache 2.0
+96.3% accuracy · 100% BLOCK · 94.6% PASS · under 10 s per triage · CPU-only · Apache 2.0
 ```
 
 | Verdict | Accuracy | Notes |
@@ -94,12 +101,18 @@ recovery, and malware memory dumps.
 | FLAG | 75% (6/8) | Small sample; tool-call format leakage on 2 edge cases |
 | PASS | 94.6% (53/56) | 3 failures on adversarial quality-C edge cases |
 
-Tested on two CPUs with identical results:
+Model: QLoRA fine-tuned Qwen2.5-1.5B-Instruct, Q4_K_M quantization.
+[Pre-built GGUF on HuggingFace](https://huggingface.co/CycleCoreTechnologies/pq-sift-defender-Q4_K_M).
 
-| CPU | Inference | GPU required |
+Tested on two CPUs with the fine-tuned model:
+
+| CPU | Triage time | GPU required |
 |---|---|---|
-| Intel Core i9-14900KF | 4 s | No |
-| AMD Ryzen 7 7800X3D | 11 s | No |
+| Intel Core i9-14900KF | 5-8 s | No |
+| AMD Ryzen 7 7800X3D | 5-8 s | No |
+
+The base `qwen2.5:1.5b` is faster (~4 s) but less consistent on boundary
+recovery and format adherence. We ship the fine-tuned model for accuracy.
 
 Full results: [`docs/accuracy.md`](docs/accuracy.md). A static proof artifact at
 [`samples/audit_chain_export.json`](samples/audit_chain_export.json) shows a real

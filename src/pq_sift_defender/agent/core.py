@@ -281,7 +281,7 @@ class IRAgent:
         self._chain = chain
         self._client = ollama_client or Client(host=host, timeout=timeout)
         self._model = model
-        self._options = {"num_gpu": num_gpu, "temperature": 0.2}
+        self._options = {"num_gpu": num_gpu, "temperature": 0.0, "num_predict": 512}
         self._on_progress: ProgressCallback = on_progress or (lambda _e, _d: None)
         try:
             self._vol = vol_client or VolatilityClient()

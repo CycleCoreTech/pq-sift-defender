@@ -10,9 +10,9 @@ Let me show you what that looks like.
 
 First, a baseline. This is a routine login alert. Low severity.
 
-The agent ingests the alert, runs it through a microsecond pre-filter, and calls its classifier tool. The pre-filter returns PASS. The classifier returns PASS.
+The agent ingests the alert, runs it through a microsecond pre-filter, and calls its forensic tools. The pre-filter returns PASS. The classifier returns PASS.
 
-Verdict: PASS. No threat detected. Three chain entries signed. That took about four seconds on CPU, no GPU.
+Verdict: PASS. No threat detected. Four chain entries signed. Less than ten seconds on CPU, no GPU.
 
 Now the case that matters.
 
@@ -34,6 +34,6 @@ Valid. Three entries. Each signed with ML-DSA-65 — that's NIST FIPS 204, the p
 
 Any third party can repeat this verification with just the chain ID.
 
-Ten sample cases. Ten correct verdicts. Four seconds on CPU. A one-point-five billion parameter open-weight model. No GPU. No cloud inference. Runs on the affected server itself.
+Validated on 136 held-out samples. Ninety-six point three percent accuracy. Less than ten seconds per triage on CPU. A fine-tuned one-point-five billion parameter open-weight model. No GPU. No cloud inference. Runs on the affected server itself.
 
 Apache 2.0. Links below.

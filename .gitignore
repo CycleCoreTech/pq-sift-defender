@@ -25,6 +25,8 @@ dist/
 .ruff_cache/
 agent_logs/*
 !agent_logs/.gitkeep
+!agent_logs/demo-finetuned-*.txt
+!agent_logs/eval-*.jsonl
 data/cache/
 htmlcov/
 .coverage

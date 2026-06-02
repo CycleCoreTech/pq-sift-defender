@@ -19,8 +19,12 @@
 
 set -euo pipefail
 
+MODEL="${LLM_MODEL:-pq-sift-defender}"
 INV2_OUT="$(mktemp)"
 trap 'rm -f "$INV2_OUT"' EXIT
+
+# Pre-warm by running a real investigation (same /api/chat codepath).
+pq-sift-defender investigate samples/clean_health_check.json --brief > /dev/null 2>&1
 
 clear
 
@@ -62,8 +66,8 @@ printf '\n'
 printf '\033[36m┌──────────────────────────────────────────────────────────┐\033[0m\n'
 printf '\033[36m│                                                          │\033[0m\n'
 printf '\033[36m│  \033[1mpq-sift-defender v0.2.0\033[0m\033[36m                                 │\033[0m\n'
+printf '\033[36m│  \033[2m136 samples · 96.3%% · < 10s triage · CPU-only\033[0m\033[36m           │\033[0m\n'
 printf '\033[36m│  \033[2mgithub.com/CycleCoreTech/pq-sift-defender\033[0m\033[36m               │\033[0m\n'
-printf '\033[36m│  \033[2mcyclecore.ai\033[0m\033[36m                                            │\033[0m\n'
 printf '\033[36m│                                                          │\033[0m\n'
 printf '\033[36m└──────────────────────────────────────────────────────────┘\033[0m\n'
 printf '\n'
